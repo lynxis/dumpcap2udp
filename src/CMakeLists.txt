@@ -1,8 +1,9 @@
-ADD_EXECUTABLE(dumppcap2udp main.c udp.c log.c)
+add_executable(dumppcap2udp main.c udp.c log.c)
 
-TARGET_LINK_LIBRARIES(schlossoeffner ${LIBS})
+include_directories(${PCAP_LIBRARIES})
+target_link_libraries(schlossoeffner ${LIBS} ${PCAP_LIBRARIES})
 
-INSTALL(TARGETS schlossoeffner
+install(TARGETS schlossoeffner
     RUNTIME DESTINATION bin
     )
 
