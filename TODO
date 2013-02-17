@@ -1,0 +1,18 @@
+mtone0:
+- cmake
+  |- libpcap
+- compile main() {}
+mston1:
+- repr(tcpdump -i any udp port 53 or icmp or arp)
+- udp writeto(192.168.2.1:9986, packet)
+- eloop()
+mston2:
+- mcast support
+mston3:
+- optarg
+  |- pcap2udp -i any -target 224.0.0.2:9986 <FILTER>
+mston4:
+- syslog
+- ubus to update filter
+mston5:
+- kernel module support?! as dump ubus<->nl80211<->kmod
