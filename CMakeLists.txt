@@ -10,4 +10,4 @@ set(LIBS ubus)
 
 add_definitions(-Os -Wall -Werror -std=c99 -g3)
 
-include_directories(src)
+add_subdirectory(src)
