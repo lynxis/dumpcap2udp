@@ -8,6 +8,6 @@ find_package(PCAP REQUIRED)
 set(CMAKE_INSTALL_PREFIX /usr)
 set(LIBS ubus)
 
-add_definitions(-Os -Wall -Werror -std=c99 -g3)
+add_definitions(-Os -Wall -Werror -std=gnu99 -g3)
 
 add_subdirectory(src)
