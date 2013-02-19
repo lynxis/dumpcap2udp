@@ -14,9 +14,26 @@
 
 #include <sys/epoll.h>
 
+#include "udp.h"
 
 
 #define MAX_EVENTS 16
+#define PCAP_CHECK_ERROR(expression, ...) do { \
+    ret = expression; \
+    if(ret == NULL) { \
+        fprintf("Error %s", "I"); \
+    } \
+    } while(0)
+
+void handle_pcap(pcap_t *handle) {
+    struct pcap_pkthdr pkghdr;
+    const u_char *rawpacket;
+    while((rawpacket = pcap_next(handle, &pkghdr)) != NULL) {
+        send_udp(&pkghdr, rawpacket);
+        printf("pkglen %i - pkgcap %i\n", pkghdr.len, pkghdr.caplen);
+    }
+}
+
 
 /**
 - repr(tcpdump -i any udp port 53 or icmp or arp)
@@ -24,8 +41,7 @@
 - eloop()
  */
 int main(int argv, char *argc[]) {
-    char given_dev[] = "wlan1";
-    char *dev;
+    char dev[] = "wlan1";
     char errbuf[PCAP_ERRBUF_SIZE];
     int ret;
     int snaplen = 64 * 1024;
@@ -35,14 +51,17 @@ int main(int argv, char *argc[]) {
     struct bpf_program compiled_filter;
     bpf_u_int32 mask;
     bpf_u_int32 netip;
-    char filter[] = "udp";
-    struct epoll_event events[MAX_EVENTS];
+    char filter[] = "(udp port 53) or icmp or arp";
 
-    dev = pcap_lookupdev(given_dev);
-    if(dev == NULL) {
-        printf("pcap lookupdev failed: %s\n", errbuf);
-        exit(1);
-    }
+    struct epoll_event events[MAX_EVENTS];
+    char ip[] = "192.168.1.1";
+    int port = 3999;
+
+//    dev = pcap_lookupdev(given_dev);
+//    if(dev == NULL) {
+//        printf("pcap lookupdev failed: %s\n", errbuf);
+//        exit(1);
+//    }
 
     ret = pcap_lookupnet(dev, &netip, &mask, errbuf);
     if(dev == NULL) {
@@ -59,7 +78,9 @@ int main(int argv, char *argc[]) {
 
     pcap_set_promisc(handle, prmisc);
     pcap_set_snaplen(handle, snaplen);
-    pcap_set_timeout(handle, read_timeout_ms);
+    pcap_set_timeout(handle, 1);
+    pcap_setnonblock(handle, 1, errbuf);
+//    pcap_set_buffer_size(handle, 16 * 1024);
 
     // snaplen, prmisc, read_timeout_ms,
 
@@ -79,7 +100,7 @@ int main(int argv, char *argc[]) {
     }
     ret = pcap_activate(handle);
     if(ret < 0) {
-        printf("pcap compilefilter failed: %s\n", pcap_geterr(handle));
+        printf("pcap activate failed: %s\n", pcap_geterr(handle));
         exit(1);
     }
 
@@ -90,7 +111,9 @@ int main(int argv, char *argc[]) {
         exit(1);
     }
 
-    int epollfd, nfds;
+    init_udp(ip, port);
+
+    int epollfd, nfds, n;
 
     epollfd = epoll_create(MAX_EVENTS);
     if(epollfd < 0) {
@@ -110,7 +133,12 @@ int main(int argv, char *argc[]) {
 
     while(1) {
         nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
-        printf("socket nfds:  %i\n", nfds);
+        printf("socket nfds: %i\n", nfds);
+        for (n = 0; n < nfds; ++n) {
+            if (events[n].data.fd == file_handle)
+                handle_pcap(handle);
+            else
+                printf("unknown filehandle\n");
+        }
     }
-    printf("Exit 0");
 }
