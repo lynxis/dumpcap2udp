@@ -51,11 +51,18 @@ int main(int argv, char *argc[]) {
     }
     printf("Using dev %s\n", dev);
     int prmisc = 1;
-    handle =  pcap_open_live(dev, snaplen, prmisc, read_timeout_ms, errbuf);
+    handle =  pcap_create(dev, errbuf);
     if(handle == NULL) {
-        printf("pcap open failed: %s\n", errbuf);
+        printf("pcap create failed: %s\n", errbuf);
         exit(1);
     }
+
+    pcap_set_promisc(handle, prmisc);
+    pcap_set_snaplen(handle, snaplen);
+    pcap_set_timeout(handle, read_timeout_ms);
+
+    // snaplen, prmisc, read_timeout_ms,
+
     mask = 0;
     // don't optimize
     ret = pcap_compile(handle, &compiled_filter, filter, 0, mask);
@@ -70,6 +77,12 @@ int main(int argv, char *argc[]) {
         printf("pcap setfilter failed: %s", errbuf);
         exit(1);
     }
+    ret = pcap_activate(handle);
+    if(ret < 0) {
+        printf("pcap compilefilter failed: %s\n", pcap_geterr(handle));
+        exit(1);
+    }
+
 
     file_handle = pcap_get_selectable_fd(handle);
     if(file_handle < 0) {
@@ -93,6 +106,7 @@ int main(int argv, char *argc[]) {
         printf("error while adding eloop");
         exit(1);
     }
+
 
     while(1) {
         nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
