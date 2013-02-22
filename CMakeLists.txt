@@ -6,7 +6,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/src/cmake)
 find_package(PCAP REQUIRED)
 
 set(CMAKE_INSTALL_PREFIX /usr)
-set(LIBS ubus)
 
 add_definitions(-Os -Wall -Werror -std=gnu99 -g3)
 
