@@ -17,3 +17,7 @@ mston4:
 mston5:
 - kernel module support?! as dump ubus<->nl80211<->kmod
   |-> iptables target?
+
+features:
+ipv6
+replace ip with host
