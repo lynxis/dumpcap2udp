@@ -125,6 +125,11 @@ int main(int argc, char *argv[]) {
     }
 
     // snaplen, prmisc, read_timeout_ms,
+    ret = pcap_activate(handle);
+    if(ret < 0) {
+        fprintf(stderr, "pcap activate failed: %s\n", pcap_geterr(handle));
+        exit(1);
+    }
 
     mask = 0;
     ret = pcap_compile(handle, &compiled_filter, filter, 0, mask);
@@ -137,11 +142,6 @@ int main(int argc, char *argv[]) {
     ret = pcap_setfilter(handle, &compiled_filter);
     if(ret == -1) {
         fprintf(stderr, "pcap setfilter failed: %s", errbuf);
-        exit(1);
-    }
-    ret = pcap_activate(handle);
-    if(ret < 0) {
-        fprintf(stderr, "pcap activate failed: %s\n", pcap_geterr(handle));
         exit(1);
     }
     file_handle = pcap_get_selectable_fd(handle);
